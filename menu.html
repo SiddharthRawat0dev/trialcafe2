@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menu</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #faf9f7;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+
+  header {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 20px 20px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  header p  { font-size: 13px; color: #aaa; margin-top: 2px; }
+
+  .table-badge {
+    display: inline-block;
+    background: #c8a96e;
+    color: #1a1a1a;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #888;
+    padding: 24px 20px 10px;
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    margin: 0 12px 8px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid #ececec;
+    gap: 12px;
+  }
+
+  .item-info { flex: 1; }
+  .item-name { font-size: 15px; font-weight: 600; }
+  .item-desc { font-size: 12px; color: #888; margin-top: 2px; }
+  .item-price { font-size: 14px; font-weight: 700; color: #c8a96e; white-space: nowrap; }
+
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .qty-btn {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid #ddd;
+    background: #fff;
+    font-size: 18px;
+    font-weight: 400;
+    color: #1a1a1a;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .qty-btn:active { background: #f0f0f0; }
+  .qty-btn.plus { border-color: #c8a96e; color: #c8a96e; }
+
+  .qty-num { font-size: 15px; font-weight: 700; min-width: 16px; text-align: center; }
+
+  .cart-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 14px 20px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cart-bar.visible { display: flex; }
+
+  .cart-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+
+  .cart-items-preview { font-size: 12px; color: #aaa; }
+
+  .order-btn {
+    background: #c8a96e;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.15s;
+  }
+  .order-btn:active { opacity: 0.85; }
+  .order-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .spacer { height: 160px; }
+
+  /* confirmation */
+  .confirm-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .confirm-overlay.show { display: flex; }
+  .confirm-sheet {
+    background: #fff;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 28px 24px 40px;
+    text-align: center;
+  }
+  .confirm-icon { font-size: 48px; margin-bottom: 10px; }
+  .confirm-sheet h2 { font-size: 22px; font-weight: 700; }
+  .confirm-sheet p  { font-size: 14px; color: #666; margin-top: 6px; }
+  .confirm-close {
+    margin-top: 24px;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>☕ Brew & Co.</h1>
+  <p>Tap items to add, then place your order</p>
+  <span class="table-badge" id="table-label">Table —</span>
+</header>
+
+<div class="section-title">Drinks</div>
+
+<div class="menu-item" data-id="latte" data-name="Flat White" data-price="3.50">
+  <div class="item-info">
+    <div class="item-name">Flat White</div>
+    <div class="item-desc">Double shot, steamed milk</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="item-price">€3.50</div>
+    <div class="qty-control">
+      <button class="qty-btn minus" onclick="changeQty(this,-1)">−</button>
+      <span class="qty-num">0</span>
+      <button class="qty-btn plus" onclick="changeQty(this,1)">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="menu-item" data-id="cappuccino" data-name="Cappuccino" data-price="3.20">
+  <div class="item-info">
+    <div class="item-name">Cappuccino</div>
+    <div class="item-desc">Espresso, foam, steamed milk</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="item-price">€3.20</div>
+    <div class="qty-control">
+      <button class="qty-btn minus" onclick="changeQty(this,-1)">−</button>
+      <span class="qty-num">0</span>
+      <button class="qty-btn plus" onclick="changeQty(this,1)">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="menu-item" data-id="espresso" data-name="Espresso" data-price="2.50">
+  <div class="item-info">
+    <div class="item-name">Espresso</div>
+    <div class="item-desc">Single or double shot</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="item-price">€2.50</div>
+    <div class="qty-control">
+      <button class="qty-btn minus" onclick="changeQty(this,-1)">−</button>
+      <span class="qty-num">0</span>
+      <button class="qty-btn plus" onclick="changeQty(this,1)">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="menu-item" data-id="iced-latte" data-name="Iced Latte" data-price="4.00">
+  <div class="item-info">
+    <div class="item-name">Iced Latte</div>
+    <div class="item-desc">Cold milk, espresso, ice</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="item-price">€4.00</div>
+    <div class="qty-control">
+      <button class="qty-btn minus" onclick="changeQty(this,-1)">−</button>
+      <span class="qty-num">0</span>
+      <button class="qty-btn plus" onclick="changeQty(this,1)">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Food</div>
+
+<div class="menu-item" data-id="croissant" data-name="Croissant" data-price="2.80">
+  <div class="item-info">
+    <div class="item-name">Croissant</div>
+    <div class="item-desc">Butter, plain</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="item-price">€2.80</div>
+    <div class="qty-control">
+      <button class="qty-btn minus" onclick="changeQty(this,-1)">−</button>
+      <span class="qty-num">0</span>
+      <button class="qty-btn plus" onclick="changeQty(this,1)">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="menu-item" data-id="banana-bread" data-name="Banana Bread" data-price="3.50">
+  <div class="item-info">
+    <div class="item-name">Banana Bread</div>
+    <div class="item-desc">Served warm with butter</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="item-price">€3.50</div>
+    <div class="qty-control">
+      <button class="qty-btn minus" onclick="changeQty(this,-1)">−</button>
+      <span class="qty-num">0</span>
+      <button class="qty-btn plus" onclick="changeQty(this,1)">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- Cart bar -->
+<div class="cart-bar" id="cart-bar">
+  <div class="cart-summary">
+    <div>
+      <div style="font-weight:700;font-size:15px" id="cart-count">0 items</div>
+      <div class="cart-items-preview" id="cart-preview"></div>
+    </div>
+    <div style="font-size:18px;font-weight:800" id="cart-total">€0.00</div>
+  </div>
+  <button class="order-btn" id="order-btn" onclick="placeOrder()">Place order →</button>
+</div>
+
+<!-- Confirmation -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-sheet">
+    <div class="confirm-icon">✅</div>
+    <h2>Order sent!</h2>
+    <p id="confirm-msg">Your order is on its way.</p>
+    <button class="confirm-close" onclick="closeConfirm()">Done</button>
+  </div>
+</div>
+
+<!-- ✅ PASTE YOUR FIREBASE CONFIG HERE -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDihjTaRSZedRbHDfBsoIgWenxRUX6nRmQ",
+    authDomain: "trial-a390d.firebaseapp.com",
+    databaseURL: "https://trial-a390d-default-rtdb.firebaseio.com",
+    projectId: "trial-a390d",
+    storageBucket: "trial-a390d.firebasestorage.app",
+    messagingSenderId: "71883261564",
+    appId: "1:71883261564:web:069b066139daa011fd6bf9"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // Read table number from URL: menu.html?table=4
+  const params = new URLSearchParams(window.location.search);
+  const tableNum = params.get('table') || '?';
+  document.getElementById('table-label').textContent = `Table ${tableNum}`;
+
+  // Cart state
+  const cart = {};
+
+  window.changeQty = function(btn, delta) {
+    const row   = btn.closest('.menu-item');
+    const id    = row.dataset.id;
+    const name  = row.dataset.name;
+    const price = parseFloat(row.dataset.price);
+    const qtyEl = row.querySelector('.qty-num');
+
+    if (!cart[id]) cart[id] = { name, price, qty: 0 };
+    cart[id].qty = Math.max(0, cart[id].qty + delta);
+    qtyEl.textContent = cart[id].qty;
+    if (cart[id].qty === 0) delete cart[id];
+
+    updateCartBar();
+  };
+
+  function updateCartBar() {
+    const items  = Object.values(cart);
+    const total  = items.reduce((s, i) => s + i.price * i.qty, 0);
+    const count  = items.reduce((s, i) => s + i.qty, 0);
+    const bar    = document.getElementById('cart-bar');
+    const btn    = document.getElementById('order-btn');
+
+    if (count === 0) { bar.classList.remove('visible'); return; }
+    bar.classList.add('visible');
+
+    document.getElementById('cart-count').textContent   = `${count} item${count > 1 ? 's' : ''}`;
+    document.getElementById('cart-preview').textContent = items.map(i => `${i.qty}× ${i.name}`).join(', ');
+    document.getElementById('cart-total').textContent   = `€${total.toFixed(2)}`;
+    btn.disabled = false;
+  }
+
+  window.placeOrder = async function() {
+    const btn   = document.getElementById('order-btn');
+    const items = Object.values(cart);
+    if (!items.length) return;
+
+    btn.disabled    = true;
+    btn.textContent = 'Sending…';
+
+    const order = {
+      table: tableNum,
+      items: items.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+      total: items.reduce((s, i) => s + i.price * i.qty, 0).toFixed(2),
+      status: 'new',
+      time: Date.now()
+    };
+
+    try {
+      await push(ref(db, 'orders'), order);
+      // Reset
+      document.querySelectorAll('.qty-num').forEach(el => el.textContent = '0');
+      Object.keys(cart).forEach(k => delete cart[k]);
+      updateCartBar();
+
+      document.getElementById('confirm-msg').textContent =
+        `Table ${tableNum} · €${order.total} · Staff will bring it shortly.`;
+      document.getElementById('confirm-overlay').classList.add('show');
+    } catch(e) {
+      alert('Could not send order. Check your Firebase config.');
+      btn.disabled    = false;
+      btn.textContent = 'Place order →';
+    }
+  };
+
+  window.closeConfirm = function() {
+    document.getElementById('confirm-overlay').classList.remove('show');
+  };
+</script>
+</body>
+</html>
